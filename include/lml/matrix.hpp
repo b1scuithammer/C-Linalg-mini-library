@@ -1,6 +1,8 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
+#include <numeric>
 #include <stdexcept>
 #include <vector>
 
@@ -110,7 +112,7 @@ public:
         }
       }
       T sgn = (k % 2 == 0) ? T{1} : T{-1};
-      result += sgn * (*this)(0, k) * A.detnocheck();
+      result += sgn * (*this)(0, k) * A.detGaus();
     }
 
     return result;
@@ -129,6 +131,13 @@ public:
   Matrix<T> rowmult(const T a, const std::size_t r) {
     for (std::size_t i = 0; i < cols_; i++) {
       (*this)(r, i) *= a;
+    }
+    return *this;
+  }
+
+  Matrix<T> rowadd(const std::size_t r1, const std::size_t r2, const T c) {
+    for (std::size_t j = 0; j < cols_; j++) {
+      (*this)(r2, j) += c * (*this)(r1, j);
     }
     return *this;
   }
@@ -212,11 +221,12 @@ Matrix<T> operator*(const Matrix<T> &A, const Matrix<T> &B) {
   return result;
 }
 
-template <typename T> Matrix<T> zeros(std::size_t rows, std::size_t cols) {
+template <typename T>
+Matrix<T> zeros(const std::size_t rows, const std::size_t cols) {
   return Matrix<T>(rows, cols);
 }
 
-template <typename T> Matrix<T> identity(std::size_t n) {
+template <typename T> Matrix<T> identity(const std::size_t n) {
   Matrix<T> result(n, n);
 
   for (std::size_t i = 0; i < n; ++i) {
@@ -225,4 +235,80 @@ template <typename T> Matrix<T> identity(std::size_t n) {
   return result;
 }
 
+template <typename T>
+std::vector<T> solveAxb(const Matrix<T> &M, const std::vector<T> &rhs) {
+  Matrix<T> A = M;
+  std::vector<T> b = rhs;
+
+  if (A.rows() != b.size()) {
+    throw std::invalid_argument("Matrix dimensions don't match");
+  }
+
+  std::size_t k = 0;
+  std::size_t r = 0;
+  std::vector<std::array<std::size_t, 2>> pivots;
+
+  while (k < A.cols() &&
+         r < A.rows()) { // bring A into unnormalized row echelon form
+
+    std::size_t pivotrow = r;
+
+    for (std::size_t i = r; i < A.rows(); i++) {
+
+      if (std::abs(A(i, k)) > std::abs(A(pivotrow, k))) {
+        pivotrow = i;
+      }
+    }
+
+    if (A(pivotrow, k) == T{0}) {
+      ++k;
+      continue;
+    }
+
+    A.rowswap(pivotrow, r);
+    std::swap(b[pivotrow], b[r]);
+    pivots.push_back({r, k});
+
+    for (std::size_t i = r + 1; i < A.rows(); i++) {
+      T c = A(i, k) / A(r, k);
+      A(i, k) = T{0};
+
+      for (std::size_t j = k + 1; j < A.cols(); j++) {
+        A(i, j) -= c * A(r, j);
+      }
+      b[i] -= c * b[r];
+    }
+    ++r;
+    ++k;
+
+  } // end while
+  if (pivots.empty()) {
+    for (std::size_t i = 0; i < b.size(); i++) {
+      if (b[i] != T{0}) {
+        return {};
+      }
+    }
+    return std::vector<T>(A.cols(), T{0});
+  }
+  std::array<std::size_t, 2> lastpivot = pivots.back();
+  std::size_t lastpivotrow = lastpivot[0];
+
+  std::vector<T> result(
+      A.cols(),
+      T{0}); // result is initialized to 0, meaning free variables are set to 0
+
+  for (std::size_t i = A.rows() - 1; i > lastpivotrow; i--) {
+    if (b[i] != 0) {
+      return std::vector<T>();
+    }
+  }
+  for (std::size_t i = pivots.size(); i-- > 0;) { // perform back substitution
+    auto [pivotrow, pivotcol] = pivots[i];
+    result[pivotcol] = b[pivotrow] / A(pivotrow, pivotcol);
+    for (std::size_t i1 = pivotrow; i1-- > 0;) {
+      b[i1] -= result[pivotcol] * A(i1, pivotcol);
+    }
+  }
+  return result;
+}
 } // namespace lml

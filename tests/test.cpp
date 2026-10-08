@@ -22,7 +22,8 @@ int main() {
 
   std::cout << "(A * A)(1,1) = " << D(1, 1) << '\n';
 
-  lml::Matrix<int> E = A.transpose();
+  lml::Matrix<int> E = A;
+  E = E.transpose();
 
   std::cout << "E(0,1) = " << E(0, 1) << " (should be 3) \n";
 
@@ -63,7 +64,12 @@ int main() {
   lml::Matrix<int> I = A;
   I.rowreduce(0, 1, 0);
 
-  std::cout << "I(0,0) = " << I(1, 0) << ' ' << I(1, 1) << '\n';
+  std::cout << "I(1) = " << I(1, 0) << ' ' << I(1, 1) << '\n';
+
+  lml::Matrix<int> J = A;
+  J.rowadd(0, 1, 2);
+
+  std::cout << "J(1) = " << J(1, 0) << ' ' << J(1, 1) << " (should be 5 8)\n";
 
   return 0;
 }
