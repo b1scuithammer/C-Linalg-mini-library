@@ -2,7 +2,6 @@
 
 #include <array>
 #include <cstddef>
-#include <numeric>
 #include <stdexcept>
 #include <vector>
 
@@ -193,6 +192,18 @@ public:
     return (*this).detGaus();
   }
 
+  Matrix(std::initializer_list<std::initializer_list<T>> init)
+      : rows_(init.size()), cols_(init.size() > 0 ? init.begin()->size() : 0),
+        data_() {
+    for (const auto &row : init) {
+      if (row.size() != cols_) {
+        throw std::invalid_argument(
+            "All rows must have the same number of elements");
+      }
+
+      data_.insert(data_.end(), row.begin(), row.end());
+    }
+  }
 }; // end class matrix
 
 template <typename T>

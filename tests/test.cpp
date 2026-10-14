@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 #include "lml/matrix.hpp"
 
@@ -70,6 +71,17 @@ int main() {
   J.rowadd(0, 1, 2);
 
   std::cout << "J(1) = " << J(1, 0) << ' ' << J(1, 1) << " (should be 5 8)\n";
+
+  lml::Matrix<double> K(2, 2);
+  K(0, 0) = 2, K(0, 1) = 1;
+  K(1, 0) = 1, K(1, 1) = 3;
+
+  std::vector<double> b = {5, 6};
+
+  std::vector<double> res = lml::solveAxb(K, b);
+
+  std::cout << "res = {" << res[0] << ", " << res[1]
+            << "}(should be {1.8,1.4})\n";
 
   return 0;
 }
