@@ -72,6 +72,11 @@ int main() {
 
   std::cout << "J(1) = " << J(1, 0) << ' ' << J(1, 1) << " (should be 5 8)\n";
 
+  lml::Matrix<double> K1{{1, 2}, {3, 4}};
+
+  std::cout << "K1 = " << K1(0, 0) << K1(0, 1) << K1(1, 0) << K1(1, 1)
+            << " (should be 1234)\n";
+
   lml::Matrix<double> K(2, 2);
   K(0, 0) = 2, K(0, 1) = 1;
   K(1, 0) = 1, K(1, 1) = 3;
@@ -82,6 +87,30 @@ int main() {
 
   std::cout << "res = {" << res[0] << ", " << res[1]
             << "}(should be {1.8,1.4})\n";
+
+  K = {{1, 1}, {2, 2}};
+  b = {2, 4};
+  res = lml::solveAxb(K, b);
+
+  std::cout << "res = {" << res[0] << ", " << res[1] << "}(should be {2,0})\n";
+
+  K = {{1, 1}, {2, 2}};
+  b = {2, 5};
+  res = lml::solveAxb(K, b);
+
+  std::cout << res.empty() << "(should be 1)\n";
+
+  K = {{0, 0}, {0, 0}};
+  b = {0, 0};
+  res = lml::solveAxb(K, b);
+
+  std::cout << "res = {" << res[0] << ", " << res[1] << "}(should be {0,0})\n";
+
+  K = {{0, 0}, {0, 0}};
+  b = {1, 0};
+  res = lml::solveAxb(K, b);
+
+  std::cout << res.empty() << "(should be 1)\n";
 
   return 0;
 }
